@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Local env (contains real client id, session secret)
+.env
+.env.local
+.env.*.local
+
+# Build output
+dist/
+build/
+
+# Editor / OS noise
+.DS_Store
+*.log
+.vscode/
+.idea/
+*.swp
+
+# Claude Code session state (may contain real client ids in permission cache)
+.claude/
+
+# Misc
+*.pid
+.cache/
+.parcel-cache/
