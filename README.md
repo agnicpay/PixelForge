@@ -13,9 +13,7 @@ touches money, never stores card data, and never calculates user balances
 client-side. The balance shown in the UI is read verbatim from Agnic's
 `GET /api/balance`.
 
-![PixelForge studio](docs/screenshot.png)
-> _(Add `docs/screenshot.png` to display a preview — the dev server runs
-> on http://localhost:5173 once you've followed the setup steps below.)_
+![PixelForge landing](docs/screenshot.png)
 
 ## What this codebase demonstrates
 
