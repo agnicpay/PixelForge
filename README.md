@@ -15,6 +15,75 @@ client-side. The balance shown in the UI is read verbatim from Agnic's
 
 ![PixelForge landing](docs/screenshot.png)
 
+## The prompt that built this
+
+This entire codebase was produced in a single Claude Code session from the
+spec below. Click to expand — it's a useful template if you want to build
+your own Agnic partner app.
+
+<details>
+<summary><b>Click to view the build prompt</b></summary>
+
+````
+You are an expert full-stack developer. Your task is to build a complete, runnable demo web app called "PixelForge" — a Freepik-style site where users generate images from multiple AI models.
+
+<business_model>
+The app is monetized entirely through Agnic. Agnic acts as the Merchant of Record (MoR), bills the end user directly, and pays this app a partner revenue share.
+STRICT RULE: This app NEVER touches money, NEVER stores card data, and NEVER calculates or shows user balances.
+</business_model>
+
+<step_1_documentation>
+READ THE DOCS BEFORE WRITING ANY CODE.
+Do not start coding until you can restate the OAuth flow and the image-generation request shape.
+- AI Gateway (Quickstart, Models, Image Gen): https://docs.agnic.ai/docs/ai-gateway | https://docs.agnic.ai/docs/ai-gateway/models | https://docs.agnic.ai/docs/ai-gateway/multimodal/image-generation
+- Partner Program & Monetization: https://docs.agnic.ai/docs/partner-program | https://docs.agnic.ai/docs/partner-program/checkout
+- Authentication (OAuth2): https://docs.agnic.ai/docs/authentication/oauth2
+</step_1_documentation>
+
+<integration_ground_truth>
+Treat the following as absolute ground truth. Verify against docs if needed:
+1. API Base: `https://api.agnic.ai/v1` (OpenAI-compatible)
+2. Auth: End-user auth MUST use OAuth 2.0 Authorization Code + PKCE (S256). No client secret (public client). Use loopback/registered redirect URI from env.
+3. Live Model Picker: Fetch from `GET https://api.agnic.ai/v1/models`. You MUST filter this list live to only show models where `output_modalities` includes "image".
+4. Partner Attribution: You MUST send the header `X-Partner-Id: <AGNIC_CLIENT_ID>` on every generation call.
+5. Token Security: Token exchange and refresh happen server-side. The `agnic_at_` token is NEVER exposed to the browser. Proxy calls to api.agnic.ai through the backend.
+</integration_ground_truth>
+
+<step_2_build_requirements>
+Product UI/UX (Keep it minimal, STRICTLY NO feature creep):
+- Landing Page: Hero section, sample gallery, "Generate" CTA.
+- Connect Button: "Connect with Agnic" → triggers full OAuth2 + PKCE flow.
+- Studio Page (Auth Required): Prompt box, live model picker, "Generate" button, result grid with download option. Display the selected model and request ID per image.
+- Graceful States:
+  - Not-connected.
+  - Generating (loading state).
+  - HTTP 402 (Insufficient credit) → Show exact message: "You're out of Agnic credit — top up at https://app.agnic.ai/topup". DO NOT invent a balance UI.
+- Legal Footer: Must be visible in the UI footer and connect screen: "Payments and billing are handled by Agnic. You contract directly with Agnic; PixelForge never receives or holds your funds."
+
+Tech Stack:
+- Architecture: Single repo. One backend (Node/Express or Hono) + a React/Vite frontend.
+- Run Command: Must be runnable with `npm install && npm run dev`.
+- Database: NO database required (in-memory session for the demo is mandatory).
+- Auth Providers: ONLY Agnic OAuth. Do not add any others.
+- Environment Variables: `AGNIC_CLIENT_ID`, `AGNIC_REDIRECT_URI`, `AGNIC_API_BASE` (default https://api.agnic.ai). No hardcoded secrets.
+</step_2_build_requirements>
+
+<deliverables>
+1. Working Code: Provide complete code. NO TODOs, NO placeholder functions, NO mocked API calls.
+2. README.md: Include instructions for the ONE manual prerequisite (registering an OAuth client at https://app.agnic.ai/oauth-clients to obtain AGNIC_CLIENT_ID and set the redirect URI), the required env vars, and steps to run.
+3. Verification Summary: Before declaring done, state exactly what you verified vs. assumed regarding the dev server, the PKCE challenge, the live /v1/models fetch, and the generation request body shape.
+</deliverables>
+````
+
+Two features were added after the initial build via follow-up prompts:
+balance display + hosted top-up flow (using
+`GET /api/balance` and `https://app.agnic.ai/topup`), and a Freepik-inspired
+visual redesign of the Studio. The original "no balance UI" rule was relaxed
+once Agnic's authoritative balance endpoint was introduced as the source
+of truth — PixelForge still does no client-side math.
+
+</details>
+
 ## What this codebase demonstrates
 
 - **OAuth 2.0 Authorization Code + PKCE (S256)** — public client, no client
